@@ -1,0 +1,35 @@
+# 🧠 Math Quiz Game
+
+Test your brain, flex your math speed, and level up your logic skills — all in one game!
+
+
+
+## 🎮 Features
+
+- ⏳ Timed math challenges
+- ✅ Correct/Wrong answer sound effects
+- 🎯 Difficulty levels: Easy, Medium, Hard
+- 🏆 Leaderboard saved in `localStorage`
+- 🔢 Supports keyboard input (press Enter to check)
+- 🔁 Restart anytime, no reload needed
+
+---
+
+## ⚙️ How to Play
+
+1. Click **Start** to begin the game.
+2. Answer the question before time runs out.
+3. Press **Check** or hit `Enter` to submit.
+4. See your score climb! Wrong answers can show you the correct solution using a calculator.
+5. Compete against yourself on the leaderboard!
+
+---
+
+## 🚀 Live Demo
+
+
+
+---
+
+
+
