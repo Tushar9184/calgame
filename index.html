@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Math Game</title>
+  <style>
+    body {
+      background-color: #111;
+      color: aliceblue;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+
+    #display {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    input {
+      font-size: 18px;
+      padding: 10px;
+      width: 100px;
+    }
+
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #score {
+      margin-top: 20px;
+      font-size: 20px;
+    }
+
+    select {
+      padding: 5px;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+
+    #leaderboard {
+      margin-top: 30px;
+      text-align: left;
+      max-width: 300px;
+      margin-inline: auto;
+    }
+
+    #leaderboard h3 {
+      margin-bottom: 10px;
+    }
+
+    #leaderboard ol {
+      padding-left: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome to Math Quiz Game</h1>
+  <h2>Check your math speed</h2>
+
+  <label for="difficulty">Select Difficulty: </label>
+  <select id="difficulty">
+    <option value="easy">Easy</option>
+    <option value="medium" selected>Medium</option>
+    <option value="hard">Hard</option>
+  </select>
+
+  <div id="display">Question will appear here</div>
+
+  <div id="gameControls" style="display:none;">
+    <input type="text" id="answer">
+    <div id="timmer">Time: 10</div>
+    <div>
+      <button id="checkBtn" onclick="check()" disabled>Check</button>
+      <button id="nextBtn" onclick="next()" disabled>Next</button>
+    </div>
+    <p id="score">Score: 0</p>
+  </div>
+
+  <button id="startBtn" onclick="start()">Start</button>
+
+  <div id="leaderboard">
+    <h3>🏆 Leaderboard (Top 5)</h3>
+    <ol id="boardList"></ol>
+  </div>
+
+  <!-- Sound Effects -->
+  <audio id="correctSound" src="https://www.soundjay.com/button/beep-07.wav" preload="auto"></audio>
+  <audio id="wrongSound" src="https://www.soundjay.com/button/beep-10.wav" preload="auto"></audio>
+
+  <script>
+    let display = document.getElementById("display");
+    let input = document.getElementById("answer");
+    let score = document.getElementById("score");
+    let timerElement = document.getElementById("timmer");
+    let boardList = document.getElementById("boardList");
+    let difficultySelect = document.getElementById("difficulty");
+    let correctSound = document.getElementById("correctSound");
+    let wrongSound = document.getElementById("wrongSound");
+
+    let sc = 0;
+    let answer = 0;
+    let timer;
+    let timeleft = 10;
+
+    function getRangeByDifficulty() {
+      const level = difficultySelect.value;
+      if (level === "easy") return 20;
+      if (level === "medium") return 100;
+      return 1000;
+    }
+
+    function generateQuestion() {
+      let range = getRangeByDifficulty();
+      let q1 = Math.floor(Math.random() * range + 1);
+      let q2 = Math.floor(Math.random() * range + 1);
+      let ops = ["+", "-", "*", "/"];
+      let x = Math.floor(Math.random() * 4);
+      if (ops[x] === "/" && q2 === 0) q2 = 1;
+
+      display.textContent = `${q1} ${ops[x]} ${q2}`;
+      answer = Math.round(eval(`${q1}${ops[x]}${q2}`) * 100) / 100;
+    }
+
+    function setTime() {
+      clearInterval(timer);
+      timeleft = 10;
+      timerElement.innerText = `Time: ${timeleft}`;
+      timer = setInterval(() => {
+        timeleft--;
+        timerElement.innerText = `Time: ${timeleft}`;
+        if (timeleft <= 0) {
+          clearInterval(timer);
+          alert("⏰ Time's up!");
+          next();
+        }
+      }, 1000);
+    }
+
+    function start() {
+      sc = 0;
+      updateScore();
+      input.value = "";
+      generateQuestion();
+      setTime();
+      document.getElementById("gameControls").style.display = "block";
+      document.getElementById("checkBtn").disabled = false;
+      document.getElementById("nextBtn").disabled = false;
+      document.getElementById("startBtn").innerText = "Restart";
+    }
+
+    function next() {
+      input.value = "";
+      generateQuestion();
+      setTime();
+    }
+
+    function check() {
+      clearInterval(timer);
+      let userAnswer = parseFloat(input.value);
+      if (isNaN(userAnswer)) {
+        alert("⚠️ Please enter a valid number!");
+        setTime();
+        return;
+      }
+
+      if (Math.abs(userAnswer - answer) < 0.01) {
+        correctSound.play();
+        alert("✅ Correct answer!");
+        sc++;
+        updateScore();
+      } else {
+        wrongSound.play();
+        let ask = confirm("❌ Wrong answer! Wanna check the correct answer?");
+        if (ask) {
+          localStorage.setItem("expression", display.innerText);
+          window.open("calculator.html", "_blank");
+        }
+      }
+
+      next();
+    }
+
+    function updateScore() {
+      score.innerText = `Score: ${sc}`;
+      saveToLeaderboard(sc);
+    }
+
+    function saveToLeaderboard(newScore) {
+      let board = JSON.parse(localStorage.getItem("leaderboard")) || [];
+      board.push(newScore);
+      board.sort((a, b) => b - a);
+      board = board.slice(0, 5);
+      localStorage.setItem("leaderboard", JSON.stringify(board));
+      showLeaderboard();
+    }
+
+    function showLeaderboard() {
+      let board = JSON.parse(localStorage.getItem("leaderboard")) || [];
+      boardList.innerHTML = "";
+      board.forEach(score => {
+        let li = document.createElement("li");
+        li.textContent = `Score: ${score}`;
+        boardList.appendChild(li);
+      });
+    }
+
+    input.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") check();
+    });
+
+    window.onload = showLeaderboard;
+  </script>
+</body>
+</html>
